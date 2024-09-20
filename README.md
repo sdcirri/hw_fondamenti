@@ -1,2 +1,3 @@
 # hw_fondamenti
-Homeworks for the "Introduction to computer programming" course at Sapienza (A.Y. 2020/21)
+Homeworks per il corso di Fondamenti di programmazione a La Sapienza (aa. 2020/21).
+Ogni file di soluzione contiene la rispettiva traccia. Prima di avviare gli unit test decomprimere i file XZ.
