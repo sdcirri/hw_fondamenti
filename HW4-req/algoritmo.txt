@@ -1,0 +1,133 @@
+Problema:
+    Determinare il sync della poesia contenuta nel file di input fornito e scrivere la sua matrice di accenti in un altro file
+
+Input:
+- inputfilename: file da cui leggere la poesia
+- outputfilename: file in cui scrivere la matrice di accenti
+- tau: costante per il calcolo del sync
+
+Output:
+- Matrice degli accenti (in outputfilename)
+- Coefficiente di sync del poema (ritornato)
+
+
+Innanzitutto è necessario calcolare la matrice di accenti, per fare ciò bisogna leggere il file riga per riga e trovare gli
+accenti di ogni parola, ogni riga della matrice corrisponderà a un verso della poesia. Bisogna inoltre tenere presente
+che le parole possono contenere anche accenti secondari (trascurabili) e che i file possono contenere punteggiatura
+e altri caratteri speciali (che possono essere ignorati). Inoltre, la presenza di righe vuote può risultare in righe vuote
+nella matrice che possono influire sul calcolo del sync. Pertanto, bisogna ignorare eventuali righe vuote. In questo caso può
+rendere più leggibile il codice e semplificare l'eventuale debugging scomporre questo problema in varie sotto-funzioni che si
+richiamano a vicenda per ritornare la matrice finale alla nostra funzione principale
+
+Quindi, per calcolare la nostra matrice:
+    Inizializza la matrice come lista vuota
+    Apri il file di input
+    Con il file aperto:
+        Per ogni riga del file:
+            Se è una riga non vuota:
+                Calcola la lista di accenti della riga
+                Aggiungi la lista degli accenti alla matrice
+
+Qui può far comodo una funzione a parte per calcolare la lista di accenti di ogni singola riga
+
+Per processare un verso in una lista di accenti:
+    Calcola la lista delle parole contenute nel verso
+    Inizializza la lista degli accenti del verso come lista vuota
+    Per ogni parola contenuta nel verso:
+        Calcola i fonemi nella parola
+        Se non sono state trovate pronunce valide:
+            Aggiungi alla lista degli accenti un numero di zeri (accenti nulli) pari alla lunghezza della parola / 2 (p. intera ovviamente)
+        Altrimenti:
+            Trova gli accenti nella parola in base ai fonemi
+            Per ogni accento:
+                Se è un accento primario:
+                    Aggiungi un uno alla lista di accenti
+                Altrimenti (accento nullo o secondario):
+                    Aggiungi uno zero alla lista di accenti
+        Aggiungi uno zero aggiuntivo (spazio tra due parole o fine verso) alla lista di accenti
+    Ritorna la lista di accenti
+
+Qui invece si può implementare una funzione che estrae le parole contenute in una stringa (la nostra riga di testo)
+
+Per estrarre le parole da una stringa di testo:
+    Trova tutti i caratteri non-alfabetici nella stringa
+    Per ogni carattere trovato:
+        Sostituiscilo con uno spazio
+    Ritorna la stringa spezzata in corrisponenza degli spazi
+
+In questo modo abbiamo ottenuto la nostra matrice di accenti con righe di lunghezza variabile, tuttavia, per definizione, le righe
+di una matrice devono avere lunghezza omogenea, pertanto vanno "pareggiate" aggiungendo degli zeri di padding alla fine
+delle righe più corte. Tornando alla nostra funzione per il calcolo della matrice
+
+Per calcolare la matrice:
+    Inizializza la matrice come lista vuota
+    Apri il file di input
+    Con il file aperto:
+        Per ogni riga del file:
+            Se è una riga non vuota:
+                Calcola la lista di accenti della riga
+                Aggiungi la lista degli accenti alla matrice
+
+    Trova la lunghezza della riga più lunga della matrice
+    Per ogni riga della matrice:
+        Se è più corta della lunghezza massima:
+            Aggiungigli alla fine un numero di zeri pari alla differenza tra la lunghezza massima e la sua lunghezza
+    Ritorna la matrice
+
+In questo modo otteniamo una matrice con righe uniformi e che può essere scritta nel nostro file di output
+
+Per scrivere la nostra matrice nel file di output:
+    Apri il file
+    Con il file aperto:
+        Per ogni riga della matrice:
+            Crea una stringa dalla concatenazione dei vari accenti più un carattere di accapo e scrivila nel file
+
+Ora che la nostra matrice è stata calcolata con successo e data in output, bisogna calcolare il sync del poema, dato
+dalla media dei sync dei vari versi, che sappiamo calcolare secondo la formula fornita. Abbiamo bisogno quindi di confrontare ogni verso
+con tutti gli altri, e per ogni confronto calcolare il sync. Le variabili necessarie al calcolo del sync sono:
+- m(A), numero di accenti nel primo verso
+- m(B), numero di accenti nel secondo verso
+- c(A|B), numero di volte in cui un accento in A è preceduto da un accento in B entro tau posizioni
+- c(B|A), numero di volte in cui un accento in B è preceduto da un accento in A entro tau posizioni
+- tau, numero di posizioni entro cui cercare accenti
+
+Con tau già fornito in input
+
+Per trovare c(A|B) e c(B|A) può essere comoda una funzione a parte, così come per il calcolo del sync
+
+Per calcolare c(A|B) (o c(B|A)) dato il tau e le due righe della matrice:
+    Inizializzalo a 0
+    Per ogni elemento nella prima riga:
+        Se è un uno (accento primario) e se c'è un uno nella porzione della seconda riga che va dall'indice dell'elemento - tau all'indice dell'elemento + 1:
+            L'accento è preceduto da un altro accento nella seconda riga e quindi incrementa c(A|B) di 1
+    Ritorna il contatore
+
+
+Per calcolare il sync date due righe della matrice e tau:
+    Calcola c(A|B) e c(B|A) (basta richiamare due vole la funzione precedente invertendo i due parametri)
+    Inizializza m(A) come numero di uni (accenti) nella prima riga
+    Inizializza m(B) come numero di uni (accenti) nella seconda riga
+
+Ora, con tutte le variabili note, si può calcolare il sync tra i due versi
+
+    Se m(A) = 0 oppure m(B) = 0:
+        Assumi il sync pari a 0 e ritornalo
+    Altrimenti:
+        Calcola il sync come 1/2 * ( c(B|A) + c(A|B) ) / √(m(A) * m(B))
+        Ritorna il sync
+
+La nostra funzione finale sarà quindi
+
+Per calcolare il sync di una poesia:
+    Calcola la sua matrice di accenti
+    Scrivi la matrice in un file di output
+    Per ogni riga della matrice:
+        Per ogni riga successiva:
+            Calcola il sync tra queste due righe secondo il tau fornito
+            Salva i risultati in una lista
+
+    Calcola la media dei valori contenuti nella lista di sync (approssimata alla sesta cifra decimale) e ritornala
+
+In questo modo avremo calcolato il sync di tutta la poesia, quindi la funzione così implementata leggerà la poesia nel file di input,
+ne calcolerà matrice di accenti scrivendola poi nel file di output e infine procederà nel calcolo del sync tra i vari versi e quello di tutta
+la poesia, ritornando quest'ultimo

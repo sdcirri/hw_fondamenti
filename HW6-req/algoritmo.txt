@@ -1,0 +1,122 @@
+Problema:
+	Pianificare un quartiere date le dimensioni dei palazzi e delle strade principali
+
+Input:
+- file_dati: un file contenente le informazioni sui vari palazzi da disporre
+- file_png: file di output in cui salvare la pianta finale
+- spaziatura: dimensione (in pixel) delle strade principali
+
+Output:
+- Pianta del quartiere (in file_png)
+- Dimensioni (larghezza x altezza) della pianta
+
+
+Vista la complessità del problema, il suo studio può essere semplificato di molto
+scomponendolo in più sotto-problemi ognuno risolto da una funzione ausiliaria. Innanzitutto,
+dovendo lavorare con immagini faranno comodo una funzione per creare un'immagine vuota
+e per disegnare rettangoli (i palazzi).
+
+Quindi, per creare un'immagine vuota date le dimensioni:
+	Crea una matrice di pixel delle dimensioni date e del colore dato e ritornala
+
+Per disegnare un rettangolo dati l'immagine di output, il colore, il punto di partenza e le dimensioni:
+	Per ogni ordinata dalla y di partenza fino a y + altezza:
+		Per ogni ascissa dalla x di partenza fino a x + larghezza:
+			Imposta il pixel alle coordinate attuali al colore richiesto
+
+
+Le informazioni sui palazzi del quartiere sono contenuti in un file di testo esterno,
+in cui ogni fascia Est-Ovest di palazzi è rappresentata da una riga contenente almeno
+un palazzo, rappresentato come quintupla di interi (larghezza, altezza, colore diviso nei tre canali rgb),
+gli interi sono separati da una virgola e uno o più spazi/tab, per cui conviene processare
+il file in un'altra funzione, che ritornerà i dati come una struttura dati facilmente processabile
+
+Per trovare la matrice di palazzi da disporre:
+	Inizializza la matrice come lista vuota
+	Apri il file di testo
+	Con il file aperto:
+		Per ogni riga del file:
+			Inizializza la lista dei palazzi dell'isolato come lista vuota
+			Elimina gli spazi (e i tab) dalla riga, dividila in base alle virgole e
+				converti i valori così ottenuti in interi
+			Per ogni insieme di valori presi a 5 a 5 nella lista così ottenuta:
+				Interpreta i valori come larghezza, altezza, canale r, canale g, canale b
+				Definisci un palazzo con queste caratteristiche e aggiungilo alla lista dell'isolato
+			Aggiungi l'isolato alla matrice
+	Ritorna la matrice così calcolata
+
+
+In questo modo abbiamo la descrizione di ogni singolo palazzo del quartiere e la dimensione
+delle strade principali, abbiamo bisogno di calcolare le dimensioni minime dell'appezzamento
+di terreno che conterrà il quartiere
+
+Quindi, per calcolare le dimensioni del quartiere:
+	Crea due liste inizialmente vuote per tenere traccia delle larghezze minime degli isolati e
+		delle altezze degli isolati (= palazzo più alto)
+	Per ogni isolato:
+		Aggiungi alla lista delle larghezze la somma delle larghezze dei palazzi più quelle
+			delle strade secondarie (pari a (numero di palazzi - 1) * la spaziatura)
+		Aggiungi alla lista delle altezze quella del palazzo più alto dell'isolato
+
+	La larghezza sarà uguale a quella dell'isolato più "largo" + le due strade esterne,
+		mentre l'altezza sarà pari alla somma delle altezze degli isolati + le strade principali
+		(pari a ((numero di isolati - 1) + 2 strade esterne) * la spaziatura)
+
+	Ritorna le dimensioni calcolate (sia della pianta che degli isolati)
+
+
+Ora non rimane altro che disegnare la pianta e salvarla nel file richiesto, nel disegno
+bisogna però tenere presente che i palazzi devono essere equidistanti e centrati (come da
+testo dell'esercizio) e bisogna quindi calcolare l'ampiezza delle strade secondarie e
+dei giardini dei vari palazzi. Sappiamo quindi che le strade secondarie devono essere uguali
+all'interno dello stesso quartiere, e che i giardini Nord e Sud devono essere uguali, quindi
+basta applicare alcune formule per calcolarne le dimensioni:
+
+	Larghezza strada = (L - Lp) / (n - 1)
+		Dove L è la larghezza degli isolati, Lp è la somma delle larghezze dei palazzi di
+		quell'isolato e n il numero dei palazzi
+
+Questa formula però ha un evidente difetto, non è in grado di calcolare la larghezza per n=1,
+in tal caso possiamo assumere semplicemente due strade secondarie, ottenendo:
+
+	Larghezza strada = (L - Lp) / (n - 1) 	per n > 1
+	Larghezza strada = (L - Lp) / 2			per n = 1
+
+Mentre per calcolare l'altezza dei giardini basta vedere la differenza tra il palazzo
+corrente e il maggiore e dividere il risultato per due giardini equivalenti, per cui avremo:
+
+	Altezza giardino = (Hmax - H) / 2
+		Dove Hmax è l'altezza del palazzo più alto dell'isolato e H l'altezza del palazzo corrente
+
+Ora non ci resta altro che applicare le formule e disegnare il quartiere
+
+Per disegnare la pianta del quartiere:
+	Crea una nuova immagine vuota (nera)
+	Imposta la posizione iniziale a (spaziatura, spaziatura), dove spaziatura è la Larghezza
+		delle strade principali
+	Per ogni isolato:
+		Disegna l'isolato
+		Ritorna a Ovest fino a x=spaziatura
+		Spostati a Sud dell'altezza dell'isolato (quella del palazzo più alto) + la spaziatura
+	Ritorna l'immagine
+
+Per disegnare un isolato:
+    Calcola la larghezza delle strade secondarie
+    Per ogni palazzo dell'isolato:
+		Calcola l'altezza dei giardini
+		Se l'isolato ha un solo palazzo spostati a Est (lascia lo spazio per la strada secondaria)
+		Disegna un rettangolo a partire dalla posizione attuale + lo spazio per il giardino
+		Spostati a Est della lunghezza del palazzo più la strada secondaria
+
+In questo modo abbiamo ottenuto una pianta del quartiere che rispetta i requisiti richiesti,
+quindi la nostra funzione ex() sarà la seguente
+
+Per costruire la pianta del quartiere descritto in file_dati:
+	Leggi la matrice di palazzi da file_dati
+	Calcola la larghezza e l'altezza dell'immagine e dei vari isolati
+	Disegna la pianta secondo i parametri calcolati
+	Salva l'immagine in file_png
+	Ritorna le dimensioni dell'immagine finale (larghezza, altezza)
+
+Questa funzione sfrutterà quindi quelle implementate fino a adesso per realizzare una pianta
+con i requisiti richiesti e la salverà del file di output fornito ritornandone poi le dimensioni

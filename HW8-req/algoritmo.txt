@@ -1,0 +1,179 @@
+Problema:
+    Generare tutte le immagini possibili con le proprietà descritte
+
+Input:
+- colors, colori da utilizzare per realizzare le immagini
+- img_properties, proprietà che le immagini generate devono rispettare
+- D, lato dell'immagine quadrata
+
+
+Per risolvere questo problema basta pensare all'immagine come ad un albero di gioco, in cui alla radice
+abbiamo un'immagine base da cui generare un figlio per ogni 'mossa' possibile (in questo caso, modifica
+di uno o più pixel), e per ogni figlio bisogna generare un sotto-albero ricorsivamente.
+
+Quindi, per generare un albero di gioco e ritornare le immagini valide:
+    Se non sono definite, crea due liste per i nodi già analizzati e quelli validi e inizializzate come liste vuote
+    Se non è definita una radice creala con le proprietà date e riempi l'immagine con il primo colore
+    Aggiungi la root alla lista di nodi noti
+    Se la root rispetta la proprietà data aggiungila ai nodi validi
+
+    Per ogni riga della matrice immagine:
+        Per ogni pixel della riga:
+            Per ogni colore:
+                Crea un nodo figlio e copia al suo interno il conenuto di root
+                Assegna al pixel alle coordinate correnti il colore corrente
+                Se il nodo figlio non è stato ancora analizzato:
+                    Aggiungilo ai nodi noti
+                    Se rispetta la proprietà aggiungilo ai nodi validi
+                    Crea un sotto-albero con radice il figlio e passagli le liste di nodi noti e validi
+
+    Ritorna la lista di nodi validi
+
+Per validare un'immagine:
+    Inizializza la validità come un booleano vero
+
+    Per ogni valore i da 0 all'altezza dell'immagine - 1:
+        Per ogni valore j da 0 alla lunghezza dell'immagine - 1:
+            Prendi la sotto-immagine formata dai pixel [j][i], [j][i+1], [j+1][i], [j+1][i+1] dell'immagine originale
+            Se la proprietà è pattern_diff_:
+                La validità rimane vera solo se i pixel della sotto-immagine sono tutti diversi
+            Altrimenti se la proprietà è pattern_cross_:
+                La validità rimane vera solo se i pixel in alto a sinistra e in basso a destra sono uguali e diversi
+                    da quelli in alto a destra e in basso a sinistra (uguali tra loro)
+            Altrimenti se la proprietà è pattern_vrect_:
+                La validità rimane vera solo se i pixel della sotto-immagine sono uguali lungo le colonne (e le colonne diverse)
+            Altrimenti se la proprietà è pattern_hrect_:
+                La validità rimane vera solo se i pixel della sotto-immagine sono uguali lungo le righe (e le righe diverse)
+
+    Ritorna la validità
+
+
+I nodi vengono rappresentati come oggetti che hanno come membri la dimensione, la proprietà, i colori
+e il contenuto (l'immagine), e un due metodi: uno per il riempimento con un colore accettabile che riempie
+il contenuto tramite una list comprehension, e uno per la validazione, che valida il contenuto dell'immagine
+appoggiandosi alla funzione già definita.
+
+In questo modo riusciamo a generare un albero di gioco con tutte le possibili soluzioni e la funzione
+ritornerà tutte quelle valide. Tuttavia questo algoritmo è molto inefficiente, quindi conviene pensare
+a delle proprietà dei vari tipi di immagini che si possono sfruttare per rendere il tutto molto più fattibile.
+Le proprietà richieste sono:
+- pattern_cross_, che genera un motivo 'a scacchiera'
+- pattern_vrect_, che genera un motivo a barre verticali,
+- pattern_hrect_, che genera un motivo a barre orizzontali,
+- pattern_diff_, che genera un motivo in cui ogni sotto-immagine 2x2 arbitratria ha
+    tutti i suoi pixel diversi
+
+
+Partendo dai più semplici, pattern_vrect_ e pattern_hrect_ generano dei motivi a barre, quindi i pixel
+di ogni riga (o colonna) sono uguali tra loro, di conseguenza basterà applicare il ragionamento precedente
+ad una lista e poi ripeterla per ottenere l'immagine finale. Inoltre per migliorare l'efficienza basta notare
+che le immagini simmetriche rispetto all'orizzontale sono a loro volta valide
+
+Per ottenere il simmetrico di un nodo:
+    Crea un nuovo nodo con le stesse proprietà
+    Se la simmetria è orizzontale:
+        Il contenuto del nuovo nodo sarà uguale alla lista delle righe dell'immagine originale invertite
+    Altrimenti:
+        Il contenuto del nuovo nodo sarà uguale all'immagine originale invertita
+    Ritorna il nodo
+
+Per generare le immagini di tipo pattern_vrect_:
+    Se non sono definite, crea due liste per i nodi già analizzati e quelli validi e inizializzate come liste vuote
+    Se non è definita una radice creala con le proprietà date e riempi l'immagine con il primo colore
+    Aggiungi la root alla lista di nodi noti
+    Prendi la prima riga della root
+
+    Per ogni pixel della riga:
+        Per ogni colore:
+            Crea una nuova riga come copia della principale
+            Assegna al pixel corrente il colore corrente
+            Ripeti la riga per ottenere un'immagine quadrata
+            Crea un nodo figlio a partire da questa immagine
+            Se rispetta la proprietà pattern_vrect_:
+                Ottieni il nodo simmetrico
+                Aggiungi il simmetrico ai nodi noti
+                Aggiungi entrambi ai nodi validi
+            Crea un sotto-albero con radice il figlio e passagli le liste di nodi noti e validi
+
+    Ritorna la lista di nodi validi
+
+Il ragionamento per pattern_hrect_ è molto simile, solo che invece che applicare le permutazioni alla prima riga della root
+si applicano alla prima colonna, e ogni elemento della colonna viene ripetuto per formare una riga, ottenendo così l'immagine
+da analizzare, e in questo caso la simmetria tra nodi validi sarà verticale anziché orizzontale.
+
+
+Per quanto riguarda pattern_cross_, il risultato finale è un motivo a scacchiera, quindi bisognerà prendere i colori a due a due
+e creare delle righe con i due colori alternati, una volta iniziando dal primo, una volta iniziando dal secondo. Inoltre anche qui
+i nodi simmetrici sono nodi validi
+
+Per generare le immagini di tipo pattern_cross_:
+    Se non sono definite, crea due liste per i nodi già analizzati e quelli validi e inizializzate come liste vuote
+    Se non è definito, inizializza un contatore per la riga corrente e impostalo a 0
+    Se non è definita una radice creala con le proprietà date
+    Aggiungi la root alla lista di nodi noti
+
+    Per ogni colore:
+        Per ogni altro colore:
+            Se la riga corrente è a 0 riempi la root con il primo colore
+            Crea un nodo figlio e inizializza il contenuto come copia del contenuto della root
+            Colora i pixel pari della riga corrente se la riga è pari, altrimenti colora quelli dispari
+
+            Se il nodo corrente non è noto:
+                Aggiungilo ai nodi noti
+                Se rispetta la proprietà:
+                    Ottieni il nodo simmetrico rispetto all'orizzontale
+                    Aggiungilo ai nodi noti
+                    Aggiungi entrambi ai nodi validi
+                    Resetta il contatore di riga corrente
+                Altrimenti:
+                    Crea un sotto-albero con radice il figlio e passagli le liste di nodi noti e validi,
+                        il contatore di riga incrementato e come unici colori i due correnti
+
+    Ritorna la lista di nodi validi
+
+
+Per quanto riguarda pattern_diff_ invece, nell'immagine finale ogni pixel deve essere essenzialmente diverso dagli 8 circostanti, poi iterare
+sui vari colori e per ogni pixel applicare il colore se non è presente nei pixel circostanti. Questo algoritmo costruirà ogni volta immagini univoche,
+quindi non sarà necessario tenere traccia delle immagini già studiate
+
+Per ottenere l'intorno di un elemento della matrice:
+    Ritorna gli elementi dall'indice dell'elemento - 1 all'indice dell'elemento + 1 della lista precedente a quella dell'elemento più l'elemento prima e dopo
+     nella stessa lista più gli elementi dall'indice dell'elemento - 1 all'indice dell'elemento + 1 della successiva a quella dell'elemento
+
+Per generare le immagini di tipo pattern_diff_:
+    Per ogni colore:
+        Se la root non è definita definiscila come immagine DxD nulla
+        Se il colore corrente non si trova nell'intorno del pixel corrente:
+            Copia il contenuto di root nel nuovo nodo figlio
+            Assegna il colore corrente al pixel corrente del figlio
+            Se l'ultimo pixel è ancora nullo (l'immagine non è completa):
+                Crea un sotto-albero con radice il figlio e passagli le liste di nodi noti e validi,
+                    il contatore di pixel incrementato e i colori
+            Altrimenti aggiungi l'immagine ai nodi validi (per come è stata costruita l'immagine, non sono necessari controlli)
+
+Per incrementare il contatore:
+    Incrementa di 1 la coordinata ascissa
+    Se l'ascissa supera la dimensione dell'immagine:
+        Resetta l'ascissa e incrementa l'ordinata di 1
+    Se l'ordinata supera la dimensione dell'immagine:
+        Resetta le coordinate a [0, 0]
+
+
+Implementate tutte le funzioni ottimizzate per ogni pattern, la nostra funzione ex() dovrà solamente selezionare
+la funzione più opportuna per il calcolo e ritornare il risultato. Inoltre c'è da notare che tutte queste funzioni
+generano le immagini come liste di liste, mentre l'esercizio richiede che siano tuple di tuple, quindi prima di aggiungere
+un'immagine alla lista di immagini valide, dovrà convertirla con la seguente funzione
+
+Per convertire un'immagine in una tupla di tuple:
+    Effettua il mapping della funzione tuple() su ogni elemento dell'immagine con map()
+    Converti il risultato in una tupla a sua volta e ritornalo
+
+Quindi la nostra funzione finale sarà
+
+Per ottenere la lista di tutte le immagini che rispettano le proprietà date:
+    Se la proprietà è di tipo pattern_cross_ appoggiati alla funzione per la generazione di pattern_cross_
+    Altrimenti se la proprietà è di tipo pattern_vrect_ appoggiati alla funzione per la generazione di pattern_vrect_
+    Altrimenti se la proprietà è di tipo pattern_hrect_ appoggiati alla funzione per la generazione di pattern_hrect_
+    Altrimenti se la proprietà è di tipo pattern_diff_ appoggiati alla funzione per la generazione di pattern_diff_
+    Altrimenti appoggiati alla funzione generica
+    Ritorna il risultato

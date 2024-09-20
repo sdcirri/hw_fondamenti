@@ -1,0 +1,120 @@
+Problema:
+Scrivere una funzione che disputi un torneo di "chi la spara più grossa" e ritorni la classifica finale
+
+Input:
+- matches: lista di stringhe che rappresentano le diverse giocate, il loro indice corrisponde al giocatore (giocatore 0, giocatore 1...)
+- k: massima differenza tra il carattere maggiore e minore entro la quale non si sballa
+
+Output:
+Classifica ordinata per punteggio decrescente dei giocatori
+
+
+L'analisi di questo problema risulta molto complessa per l'implementazione in un'unica grande funzione, per cui conviene svolgere un'analisi di tipo top-down,
+in cui si scompone un problema principale in tanti sotto-problemi più semplici, questo, oltre a semplificare l'implementazione, renderà il codice più leggibile e
+il debugging più semplice.
+
+Questo problema può così essere scomposto:
+- Calcolare il vincitore date due stringhe
+- Creare la classifica finale dei giocatori
+
+Un'altra funzione che confronta due caratteri faciliterà ulteriormente l'implementazione del confronto tra due stringhe
+
+Pertanto, per calcolare la classifica:
+    Creo una lista di punteggi ordinata per giocatore, inizializzando ogni punteggio a 0
+    Per ogni giocatore:
+        Per ogni giocatore ad esso successivo:
+            Trova il vincitore confrontando le due stringhe
+            Aggiungi un punto al vincitore
+    Crea una classifica ordinata dei giocatori e ritornala
+
+
+Ora bisogna analizzare i sotto-problemi di questa funzione:
+
+Problema:
+Confrontare due caratteri determinando il vincitore
+
+Input:
+- a, b: i caratteri giocati
+- k: massima differenza tra il carattere maggiore e minore entro la quale non si sballa
+
+Output:
+- a o b in base al vincitore
+
+Errori:
+- a = b (verrà ritornato un valore nullo)
+
+Le regole del gioco stabiliscono che ogni giocatore ne sfida un altro e sceglie un carattere,
+se la differenza tra i due è maggiore di k vuol dire che chi ha scelto il carattere di valore maggiore
+ha sballato, e quindi vince il minore, altrimenti vince il maggiore
+
+Per calcolare il vincitore:
+    Se sono uguali si ritorna un valore nullo (pareggio)
+    Altrimenti:
+        Si convertono entrambi in interi con ord()
+        Se a numero è maggiore di b numero:
+            Se a numero - b numero <= k ritorna a
+            Altrimenti ritorna b (a ha sballato)
+        Altrimenti:
+            Se b numero - a numero <= k ritorna b
+            Altrimenti ritorna a
+
+Problema:
+Confrontare due stringhe determinando il vincitore
+
+Input:
+- ia, ib: i giocatori (indici della lista matches)
+- a, b: le stringhe da loro giocate
+- k: massima differenza tra il carattere maggiore e minore entro la quale non si sballa
+
+Output:
+- ia o ib in base al vincitore
+
+Errori:
+- a = b
+
+Le regole del gioco stabiliscono che ogni giocatore genera una sequenza di caratteri di
+dimensione variabile ma comunque uguale agli altri concorrenti. Ogni carattere è confrontato
+con il corrispondente dell'altra lista e viene assegnato un punto in base alle regole viste in
+precedenza. In caso di pareggio tra i due, vince chi ha la somma di tutti i caratteri minore,
+in caso di ulteriore pareggio vince il primo in ordine lessicografico, le sequenze non possono
+mai essere uguali. È probabile che i vari caratteri siano separati da spazi (' ', '\t', '\n' ecc.),
+in tal caso gli spazi vanno semplicemente ignorati.
+
+Per calcolare il vincitore (asserendo a ≠ b):
+    Si inizializzano un contatore dei punti e una somma per tutti e due i concorrenti
+    Si eliminano gli spazi dalle sequenze
+    Per ogni carattere delle sequenze:
+        Somma il carattere di a convertito in numero alla somma di a
+        Somma il carattere di b convertito in numero alla somma di b
+        Compara i due caratteri
+        Aggiungi un punto al vincitore
+    Se i punti di a sono maggiori dei punti di b ritorna ia (a vincitore)
+    Altrimenti se i punti di b sono maggiori dei punti di a ritorna ib (b vincitore)
+    Altrimenti (situazione di pareggio) se la somma di a è minore di quella di b ritorna ia (a vince lo spareggio)
+    Altrimenti se la somma di b è minore di quella di a ritorna ib (b vince lo spareggio)
+    Altrimenti (ancora pareggio):
+        Ritorna chi ha giocato la prima sequenza in ordine lessicografico
+
+A questo punto siamo in grado di calcolare il numero di sfide vinte da ogni concorrente, ma non di generare una
+classifica ordinata. Questo compito viene semplificato di molto dalla varietà di strutture di dati e funzioni predefinite
+che Python ci mette a disposizione.
+
+Problema:
+Generare una classifica dati i giocatori (come indici della lista) e i rispettivi punteggi
+
+Input:
+- punti: una lista di punteggi dove l'indice rappresenta il giocatore che ha raggiunto tale punteggio
+
+Output:
+Classifica finale
+
+Per calcolare la classifica finale dei giocatori:
+    Si genera un range da 0 a n, dove n è il numero di giocatori (lunghezza della lista)
+    Si genera una zip a partire dal range e dalla lista punti, dove ogni tupla è composta da due elementi: il primo è il giocatore e il secondo il suo punteggio
+    Si converte la zip in una lista di tuple con list()
+    Ordina la lista in ordine decrescente in base al secondo elemento di ogni tupla (estraibile con una lambda)
+    Genera una lista prendendo il primo elemento di ogni tupla e ritornala, così ottenendo una lista di giocatori ordinata per punteggio
+
+    
+In questo modo passando alla funzione iniziale (ex(matches, k)) una lista di sequenze e il paramentro k saremo in grado di ottenere la classifica finale
+di un torneo
